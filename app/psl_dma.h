@@ -26,7 +26,7 @@
 #define MMIO_JOB_ADDR	0x0
 #define MMIO_LOCK_ADDR	0x8
 
-#define DEBUG 1
+//#define DEBUG 1
 
 #ifdef DEBUG
 	#define DEBUG_LINE() printf("[%s:%s] line=%d\r\n",__FILE__, __func__, __LINE__)
@@ -39,7 +39,7 @@
 #endif
 
 
-#if 0
+#if 1
 static inline uint64_t rte_rdtsc(void)
 {
 	union {

@@ -2,5 +2,5 @@
 
 cd `dirname $0`
 
-./tinytest
+./tinytest -i 67108864 -o 67108864
 
