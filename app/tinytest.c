@@ -104,6 +104,9 @@ int main (int argc, char **argv)
 	unsigned long start_cnt, end_cnt;
 	double bw, job_sec;
 
+	int time_cnt, new_time;
+	struct timeval start, end, dt;
+
 	input_size = rand()%1024 + 1;
 	output_size = rand()%16 + input_size;
 
@@ -154,26 +157,35 @@ int main (int argc, char **argv)
 	}
 	printf ("\t#### Open CAPI device Done.\n\n");
 
-	start_cnt = rte_rdtsc();
-	ret = capi_do_job (capi_wed);
-	end_cnt = rte_rdtsc();
+	new_time = 1;
+	for (time_cnt = 0; time_cnt < 30; ) {
+		if (new_time) {
+			new_time = 0;
+			gettimeofday(&start, NULL);
+		}
 
-	if (ret) {
-		printf ("Job can not be finished.\n");
-		capi_close ();
-		printf ("\t#### Close CAPI device Done.\n\n");
+		start_cnt = rte_rdtsc();
+		ret = capi_do_job (capi_wed);
+		end_cnt = rte_rdtsc();
 
-		return -1;
+		if (ret) {
+			printf ("Job can not be finished.\n");
+			capi_close ();
+			printf ("\t#### Close CAPI device Done.\n\n");
+
+			return -1;
+		}
+
+		gettimeofday(&end, NULL);
+		timersub(&end, &start, &dt);
+		if (dt.tv_sec >= 1) {
+			job_sec = ((double)((end_cnt-start_cnt)<<1))/1000000000.0;
+			bw = ((double)input_size)/job_sec/1024/1024;
+			printf ("%f ses. bw = %f MB/s\n", job_sec, bw);
+			new_time = 1;
+			time_cnt ++;
+		}
 	}
-
-	printf ("\t#### Finish the computation.\n\n");
-
-	job_sec = ((double)((end_cnt-start_cnt)<<1))/1000000000.0;
-	bw = ((double)input_size)/job_sec/1024/1024;
-	printf ("%f ses. bw = %f MB/s\n", job_sec, bw);
-
-	printf ("\n\t#### Verifying the result...\n\n");
-	verify_result (source_buf, result_buf);
 
 	capi_close ();
 	printf ("\t#### Close CAPI device Done.\n\n");
